@@ -29,8 +29,9 @@ WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *placehold
   init(id, placeholder, defaultValue, length, custom);
 }
 
+
 void WiFiManagerParameter::init(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom) {
-  _id = id;
+  _id = id;  
   _placeholder = placeholder;
   _length = length;
   _value = new char[length + 1];
@@ -56,6 +57,7 @@ const char* WiFiManagerParameter::getValue() {
 const char* WiFiManagerParameter::getID() {
   return _id;
 }
+
 const char* WiFiManagerParameter::getPlaceholder() {
   return _placeholder;
 }
@@ -247,7 +249,8 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
         //notify that configuration has changed and any optional parameters should be saved
         if ( _savecallback != NULL) {
           //todo: check if any custom parameters actually exist, and check if they really changed maybe
-          _savecallback();
+          DEBUG_WM(F("_savecallback:WL_CONNECTED"));
+          _savecallback(this); //CHANGE BY SAIFUDHEEN 30-09-2019
         }
         break;
       }
@@ -257,7 +260,8 @@ boolean  WiFiManager::startConfigPortal(char const *apName, char const *apPasswo
         //notify that configuration has changed and any optional parameters should be saved
         if ( _savecallback != NULL) {
           //todo: check if any custom parameters actually exist, and check if they really changed maybe
-          _savecallback();
+           DEBUG_WM(F("_savecallback:_shouldBreakAfterConfig"));
+          _savecallback(this); //CHANGE BY SAIFUDHEEN 30-09-2019
         }
         break;
       }
@@ -278,16 +282,24 @@ int WiFiManager::connectWifi(String ssid, String pass) {
   // check if we've got static_ip settings, if we do, use those.
   if (_sta_static_ip) {
     DEBUG_WM(F("Custom STA IP/GW/Subnet"));
-    WiFi.config(_sta_static_ip, _sta_static_gw, _sta_static_sn);
+    //WiFi.begin(ssid.c_str(), pass.c_str());
+    WiFi.config(_sta_static_ip, _sta_static_gw, _sta_static_sn, _sta_static_dn);
+    //WiFi.disconnect(); //CHANGE BY SAIFUDHEEN 30-09-2019
+     
     DEBUG_WM(WiFi.localIP());
   }
   //fix for auto connect racing issue
-  if (WiFi.status() == WL_CONNECTED && (WiFi.SSID() == ssid)) {
+  if (WiFi.status() == WL_CONNECTED && (WiFi.SSID() == ssid) && ( WiFi.SSID() != "")) { // && ( WiFi.SSID() != "") BY SAIFUDHEEN 01-10-2019
     DEBUG_WM(F("Already connected. Bailing out."));
+    DEBUG_WM("WiFi.SSID():->");
+    DEBUG_WM(WiFi.SSID());
+    DEBUG_WM("ssid:->");
+    DEBUG_WM(ssid);
     return WL_CONNECTED;
   }
   //check if we have ssid and pass and force those, if not, try with last saved values
   if (ssid != "") {
+    DEBUG_WM(F("check if we have ssid and pass and force those, if not, try with last saved values"));
     WiFi.begin(ssid.c_str(), pass.c_str());
   } else {
     if (WiFi.SSID() != "") {
@@ -298,8 +310,9 @@ int WiFiManager::connectWifi(String ssid, String pass) {
       ETS_UART_INTR_ENABLE();
 
       WiFi.begin();
-    } else {
+    } else {      
       DEBUG_WM(F("No saved credentials"));
+      return WL_NO_SSID_AVAIL;   //CHANGE BY SAIFUDHEEN 30-09-2019
     }
   }
 
@@ -366,6 +379,14 @@ void WiFiManager::startWPS() {
   return _pass;
   }
 */
+//Added Saifudheen 30-09-2019 for store these value in FLASH/EEPROM for further startup
+void WiFiManager::getStationStaticIPConfig(uint32_t *ip, uint32_t *gw, uint32_t *sn,uint32_t *dn) {
+    *ip=_sta_static_ip.v4();
+    *gw=_sta_static_gw.v4();
+    *sn=_sta_static_sn.v4();
+    *dn=_sta_static_dn.v4();
+}
+
 String WiFiManager::getConfigPortalSSID() {
   return _apName;
 }
@@ -398,10 +419,12 @@ void WiFiManager::setAPStaticIPConfig(IPAddress ip, IPAddress gw, IPAddress sn) 
   _ap_static_sn = sn;
 }
 
-void WiFiManager::setSTAStaticIPConfig(IPAddress ip, IPAddress gw, IPAddress sn) {
+void WiFiManager::setSTAStaticIPConfig(IPAddress ip, IPAddress gw, IPAddress sn, IPAddress dn) {
   _sta_static_ip = ip;
   _sta_static_gw = gw;
   _sta_static_sn = sn;
+  _sta_static_dn = dn;
+  
 }
 
 void WiFiManager::setMinimumSignalQuality(int quality) {
@@ -548,8 +571,25 @@ void WiFiManager::handleWifi(boolean scan) {
   if (_params[0] != NULL) {
     page += "<br/>";
   }
+    String item = FPSTR(HTTP_FORM_PARAM);
+    item.replace("{i}", "dhcp");
+    item.replace("{n}", "dhcp");
+    item.replace("{p}", "DHCP");
+    item.replace("{c}", "type='radio'");
+    item.replace("{v}", "");
+    page += item;
+    page += "dhcp";
+    item = FPSTR(HTTP_FORM_PARAM);
+    item.replace("{i}", "static");
+    item.replace("{n}", "dhcp");
+    item.replace("{p}", "Static_IP");
+    item.replace("{c}", "type='radio'");
+    item.replace("{v}", "checked");
 
+    page += item;
+    page += "static";
   if (_sta_static_ip) {
+
 
     String item = FPSTR(HTTP_FORM_PARAM);
     item.replace("{i}", "ip");
@@ -575,6 +615,15 @@ void WiFiManager::handleWifi(boolean scan) {
     item.replace("{p}", "Subnet");
     item.replace("{l}", "15");
     item.replace("{v}", _sta_static_sn.toString());
+
+    page += item;
+
+    item = FPSTR(HTTP_FORM_PARAM);
+    item.replace("{i}", "dn");
+    item.replace("{n}", "dn");
+    item.replace("{p}", "Subnet");
+    item.replace("{l}", "15");
+    item.replace("{v}", _sta_static_dn.toString());
 
     page += item;
 
@@ -634,6 +683,12 @@ void WiFiManager::handleWifiSave() {
     String sn = server->arg("sn");
     optionalIPFromString(&_sta_static_sn, sn.c_str());
   }
+  if (server->arg("dn") != "") {
+    DEBUG_WM(F("static dns"));
+    DEBUG_WM(server->arg("dn"));
+    String dn = server->arg("dn");
+    optionalIPFromString(&_sta_static_dn, dn.c_str());
+  }  
 
   String page = FPSTR(HTTP_HEADER);
   page.replace("{v}", "Credentials Saved");
@@ -756,8 +811,9 @@ void WiFiManager::setAPCallback( void (*func)(WiFiManager* myWiFiManager) ) {
   _apcallback = func;
 }
 
+
 //start up save config callback
-void WiFiManager::setSaveConfigCallback( void (*func)(void) ) {
+void WiFiManager::setSaveConfigCallback( void (*func)(WiFiManager* myWiFiManager) ) {
   _savecallback = func;
 }
 
