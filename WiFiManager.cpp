@@ -571,25 +571,8 @@ void WiFiManager::handleWifi(boolean scan) {
   if (_params[0] != NULL) {
     page += "<br/>";
   }
-    String item = FPSTR(HTTP_FORM_PARAM);
-    item.replace("{i}", "dhcp");
-    item.replace("{n}", "dhcp");
-    item.replace("{p}", "DHCP");
-    item.replace("{c}", "type='radio'");
-    item.replace("{v}", "");
-    page += item;
-    page += "dhcp";
-    item = FPSTR(HTTP_FORM_PARAM);
-    item.replace("{i}", "static");
-    item.replace("{n}", "dhcp");
-    item.replace("{p}", "Static_IP");
-    item.replace("{c}", "type='radio'");
-    item.replace("{v}", "checked");
 
-    page += item;
-    page += "static";
   if (_sta_static_ip) {
-
 
     String item = FPSTR(HTTP_FORM_PARAM);
     item.replace("{i}", "ip");
