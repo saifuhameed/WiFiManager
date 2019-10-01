@@ -50,15 +50,16 @@ class WiFiManagerParameter {
     WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom);
     ~WiFiManagerParameter();
 
-    const char *getID();
+    const char *getID();    
     const char *getValue();
     const char *getPlaceholder();
     int         getValueLength();
     const char *getCustomHTML();
   private:
     const char *_id;
-    const char *_placeholder;
-    char       *_value;
+    
+    const char *_placeholder;    
+    char       *_value; 
     int         _length;
     const char *_customHTML;
 
@@ -83,6 +84,7 @@ class WiFiManager
 
     // get the AP name of the config portal, so it can be used in the callback
     String        getConfigPortalSSID();
+    void 		  getStationStaticIPConfig(uint32_t *ip, uint32_t *gw, uint32_t *sn, uint32_t *dn);//Added saifudheen
 
     void          resetSettings();
 
@@ -102,11 +104,11 @@ class WiFiManager
     //sets a custom ip /gateway /subnet configuration
     void          setAPStaticIPConfig(IPAddress ip, IPAddress gw, IPAddress sn);
     //sets config for a static IP
-    void          setSTAStaticIPConfig(IPAddress ip, IPAddress gw, IPAddress sn);
+    void          setSTAStaticIPConfig(IPAddress ip, IPAddress gw, IPAddress sn, IPAddress dn);
     //called when AP mode and config portal is started
     void          setAPCallback( void (*func)(WiFiManager*) );
     //called when settings have been changed and connection was successful
-    void          setSaveConfigCallback( void (*func)(void) );
+    void          setSaveConfigCallback( void (*func)(WiFiManager*) );
     //adds a custom parameter, returns false on failure
     bool          addParameter(WiFiManagerParameter *p);
     //if this is set, it will exit after config, even if connection is unsuccessful.
@@ -144,6 +146,7 @@ class WiFiManager
     IPAddress     _sta_static_ip;
     IPAddress     _sta_static_gw;
     IPAddress     _sta_static_sn;
+    IPAddress     _sta_static_dn;
 
     int           _paramsCount            = 0;
     int           _minimumQuality         = -1;
@@ -182,7 +185,7 @@ class WiFiManager
     boolean       _debug = true;
 
     void (*_apcallback)(WiFiManager*) = NULL;
-    void (*_savecallback)(void) = NULL;
+    void (*_savecallback)(WiFiManager*) = NULL; //CHANGE BY SAIFUDHEEN 30-09-2019
 
     int                    _max_params;
     WiFiManagerParameter** _params;
