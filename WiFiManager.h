@@ -47,23 +47,25 @@ class WiFiManagerParameter {
     */
     WiFiManagerParameter(const char *custom);
     WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length);
+	WiFiManagerParameter(const char *id, const char *name, const char *placeholder, const char *defaultValue, int length);//Added Saifudheen
     WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom);
     ~WiFiManagerParameter();
 
-    const char *getID();    
+    const char *getID(); 
+    const char *getName(); 	//Added Saifudheen required for radio button group
     const char *getValue();
     const char *getPlaceholder();
     int         getValueLength();
     const char *getCustomHTML();
   private:
     const char *_id;
-    
+    const char *_name;   //Added Saifudheen, required for radio button group
     const char *_placeholder;    
     char       *_value; 
     int         _length;
     const char *_customHTML;
 
-    void init(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom);
+    void init(const char *id, const char *nm, const char *placeholder, const char *defaultValue, int length, const char *custom);
 
     friend class WiFiManager;
 };
@@ -84,7 +86,7 @@ class WiFiManager
 
     // get the AP name of the config portal, so it can be used in the callback
     String        getConfigPortalSSID();
-    void 		  getStationStaticIPConfig(uint32_t *ip, uint32_t *gw, uint32_t *sn, uint32_t *dn);//Added saifudheen
+    void 		  getStationStaticIPConfig(uint32_t *ip, uint32_t *gw, uint32_t *sn, uint32_t *dn);//Added Saifudheen
 
     void          resetSettings();
 
