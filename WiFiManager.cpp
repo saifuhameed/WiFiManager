@@ -15,6 +15,7 @@
 WiFiManagerParameter::WiFiManagerParameter(const char *custom) {
   _id = NULL;
   _placeholder = NULL;
+  _name=NULL;  //Added Saifudheen, required for radio button group 02-10-2019
   _length = 0;
   _value = NULL;
 
@@ -29,9 +30,14 @@ WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *placehold
   init(id, placeholder, defaultValue, length, custom);
 }
 
+WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *nm, const char *placeholder, const char *defaultValue, int length, const char *custom) {
+  init(id, nm, placeholder, defaultValue, length, custom);
+}
 
-void WiFiManagerParameter::init(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom) {
+ 
+void WiFiManagerParameter::init(const char *id, const char *nm, const char *placeholder, const char *defaultValue, int length, const char *custom) {
   _id = id;  
+  _name=nm;
   _placeholder = placeholder;
   _length = length;
   _value = new char[length + 1];
@@ -41,7 +47,6 @@ void WiFiManagerParameter::init(const char *id, const char *placeholder, const c
   if (defaultValue != NULL) {
     strncpy(_value, defaultValue, length);
   }
-
   _customHTML = custom;
 }
 
@@ -58,6 +63,9 @@ const char* WiFiManagerParameter::getID() {
   return _id;
 }
 
+const char* WiFiManagerParameter::getName() {
+  return _name;
+}
 const char* WiFiManagerParameter::getPlaceholder() {
   return _placeholder;
 }
@@ -98,7 +106,6 @@ bool WiFiManager::addParameter(WiFiManagerParameter *p) {
       return false;
     }
   }
-
   _params[_paramsCount] = p;
   _paramsCount++;
   DEBUG_WM(F("Adding parameter"));
@@ -556,7 +563,7 @@ void WiFiManager::handleWifi(boolean scan) {
     String pitem = FPSTR(HTTP_FORM_PARAM);
     if (_params[i]->getID() != NULL) {
       pitem.replace("{i}", _params[i]->getID());
-      pitem.replace("{n}", _params[i]->getID());
+      pitem.replace("{n}", _params[i]->getName());//Added Saifudheen, required for radio button group 02-10-2019
       pitem.replace("{p}", _params[i]->getPlaceholder());
       snprintf(parLength, 5, "%d", _params[i]->getValueLength());
       pitem.replace("{l}", parLength);
